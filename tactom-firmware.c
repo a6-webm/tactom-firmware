@@ -58,6 +58,10 @@ int main() {
     drv2605_init_for_hd_la0503_lw28_motor(drvs[i]);
   }
 
+  for (int i = 0; i < NUM_DRV; i++) {
+    drv2605_go(drvs[i]);
+  }
+
   while (true) {
     printf("Hello, world!\n");
     sleep_ms(1000);

@@ -1,5 +1,6 @@
 #include "drv2605.h"
 #include <hardware/i2c.h>
+#include <pico/time.h>
 
 Drv2605 drv2605(i2c_inst_t *i2c_inst, u8 addr) {
   Drv2605 drv;
@@ -23,8 +24,17 @@ u8 drv2605_read_reg(Drv2605 drv, u8 reg) {
   return buffer;
 }
 
-void drv2605_init_for_hd_la0503_lw28_motor(Drv2605 drv) {
-  // TODO auto calibration
+void set_part_of_reg(Drv2605 drv, u8 reg, u8 mask, u8 val) {
+  drv2605_write_reg(drv, reg, drv2605_read_reg(drv, reg) & mask | val);
+}
+
+void drv2605_go(Drv2605 drv) { drv2605_write_reg(drv, DRV2605_REG_GO, 1); }
+
+/// Returns:
+/// 0: no error
+/// -1: auto-calibration failed
+int drv2605_init_for_hd_la0503_lw28_motor(Drv2605 drv) {
+  // TODO store auto-calibration data and write it instead of auto-calibrating
   // auto-calibration ---------------------------------------------------------
   drv2605_write_reg(drv, DRV2605_REG_MODE, 0x07); // auto-calibrate mode
 
@@ -34,39 +44,32 @@ void drv2605_init_for_hd_la0503_lw28_motor(Drv2605 drv) {
       ;
   drv2605_write_reg(drv, DRV2605_REG_FEEDBACK, fb);
 
-  // TODO are we sure the driver is in "closed-loop mode"?
-  // seems to be in the Control3 register, not sure when we set that
-
   // TODO figure out if 26 (0.689Vrms) or 27 (0.716Vrms) is better
   drv2605_write_reg(drv, DRV2605_REG_RATEDV, 26);
 
   // TODO pick this number not based off vibes (1.21V)
   drv2605_write_reg(drv, DRV2605_REG_CLAMPV, 55);
 
-  drv2605_write_reg(drv, DRV2605_REG_RTPIN,
-                    0x00); // no real-time-playback
+  set_part_of_reg(drv, DRV2605_REG_CONTROL1, 0b00001111,
+                  14); // DRIVE_TIME set to 1.92ms
+
+  drv2605_write_reg(drv, DRV2605_REG_GO, 1); // start calibration
+
+  while (drv2605_read_reg(drv, DRV2605_REG_GO) != 0) {
+    sleep_ms(500);
+  }
+
+  // if DIAG_RESULT == 1, error
+  if ((drv2605_read_reg(drv, DRV2605_REG_STATUS) >> 3) & 1) {
+    return -1;
+  }
   // --------------------------------------------------------------------------
 
-  // TODO what does this do
+  drv2605_write_reg(drv, DRV2605_REG_LIBRARY, 6);  // LRA effect library
   drv2605_write_reg(drv, DRV2605_REG_WAVESEQ1, 1); // strong click
   drv2605_write_reg(drv, DRV2605_REG_WAVESEQ2, 0); // end sequence
 
-  // write_register(drv2605_inst, DRV2605_REG_OVERDRIVE, 0); // no overdrive
-
-  drv2605_write_reg(drv, DRV2605_REG_SUSTAINPOS, 0);
-  drv2605_write_reg(drv, DRV2605_REG_SUSTAINNEG, 0);
-  drv2605_write_reg(drv, DRV2605_REG_BREAK, 0);
-  drv2605_write_reg(drv, DRV2605_REG_AUDIOMAX, 0x64);
-
-  // TODO change to LRA
-  // ERM open loop
-
-  // turn off N_ERM_LRA
-  drv2605_write_reg(drv, DRV2605_REG_FEEDBACK,
-                    drv2605_read_reg(drv, DRV2605_REG_FEEDBACK) & 0x7F);
-  // turn on ERM_OPEN_LOOP
-  drv2605_write_reg(drv, DRV2605_REG_CONTROL3,
-                    drv2605_read_reg(drv, DRV2605_REG_CONTROL3) | 0x20);
+  return 0;
 }
 
 /**************************************************************************/

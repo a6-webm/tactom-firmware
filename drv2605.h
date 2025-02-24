@@ -61,19 +61,10 @@ typedef struct Drv2605Inst {
 } Drv2605;
 
 Drv2605 drv2605(i2c_inst_t *i2c_inst, u8 addr);
-void drv2605_init_for_hd_la0503_lw28_motor(Drv2605 drv2605_inst);
+int drv2605_init_for_hd_la0503_lw28_motor(Drv2605 drv2605_inst);
 void drv2605_write_reg(Drv2605 drv2605_inst, u8 reg, u8 val);
-u8 readRegister8(u8 reg);
-void setWaveform(u8 slot, u8 w);
-void selectLibrary(u8 lib);
-void go(void);
-void stop(void);
-void setMode(u8 mode);
-void setRealtimeValue(u8 rtp);
-// Select ERM (Eccentric Rotating Mass) or LRA (Linear Resonant Actuator)
-// vibration motor The default is ERM, which is more common
-void useERM();
-void useLRA();
+u8 drv2605_read_reg(Drv2605 drv, u8 reg);
+void drv2605_go(Drv2605 drv);
 
 /**************************************************************************/
 /* Portions of this project have been copied from the Adafruit DRV2605L Haptic
