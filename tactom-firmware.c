@@ -55,7 +55,7 @@ int main() {
   // cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
 
   for (int i = 0; i < NUM_DRV; i++) {
-    drv2605_init(drvs[i]);
+    drv2605_init_for_hd_la0503_lw28_motor(drvs[i]);
   }
 
   while (true) {

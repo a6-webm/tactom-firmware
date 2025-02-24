@@ -23,11 +23,29 @@ u8 drv2605_read_reg(Drv2605 drv, u8 reg) {
   return buffer;
 }
 
-void drv2605_init(Drv2605 drv) {
-  drv2605_write_reg(drv, DRV2605_REG_MODE, 0x00); // out of standby
+void drv2605_init_for_hd_la0503_lw28_motor(Drv2605 drv) {
+  // TODO auto calibration
+  // auto-calibration ---------------------------------------------------------
+  drv2605_write_reg(drv, DRV2605_REG_MODE, 0x07); // auto-calibrate mode
+
+  u8 fb = 1 << 7   // LRA mode
+          & 3 << 4 // default fb_brake_factor: 4x
+          & 1 << 2 // default loop_gain: medium
+      ;
+  drv2605_write_reg(drv, DRV2605_REG_FEEDBACK, fb);
+
+  // TODO are we sure the driver is in "closed-loop mode"?
+  // seems to be in the Control3 register, not sure when we set that
+
+  // TODO figure out if 26 (0.689Vrms) or 27 (0.716Vrms) is better
+  drv2605_write_reg(drv, DRV2605_REG_RATEDV, 26);
+
+  // TODO pick this number not based off vibes (1.21V)
+  drv2605_write_reg(drv, DRV2605_REG_CLAMPV, 55);
 
   drv2605_write_reg(drv, DRV2605_REG_RTPIN,
                     0x00); // no real-time-playback
+  // --------------------------------------------------------------------------
 
   // TODO what does this do
   drv2605_write_reg(drv, DRV2605_REG_WAVESEQ1, 1); // strong click
