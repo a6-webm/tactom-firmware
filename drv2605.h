@@ -1,5 +1,4 @@
 #include <stdbool.h>
-#include "hardware/i2c.h"
 
 typedef unsigned char u8;
 
@@ -56,11 +55,11 @@ typedef unsigned char u8;
 #define DRV2605_REG_LRARESON 0x22 ///< LRA resonance-period register
 
 typedef struct Drv2605Inst {
-  i2c_inst_t *i2c_inst;
-  u8 addr;
+  u8 mult_addr;
+  u8 port;
 } Drv2605;
 
-Drv2605 drv2605(i2c_inst_t *i2c_inst, u8 addr);
+Drv2605 drv2605(u8 addr, u8 port);
 int drv2605_init_for_hd_la0503_lw28_motor(Drv2605 drv2605_inst);
 void drv2605_write_reg(Drv2605 drv2605_inst, u8 reg, u8 val);
 u8 drv2605_read_reg(Drv2605 drv, u8 reg);

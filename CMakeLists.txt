@@ -34,15 +34,15 @@ project(tactom-firmware C CXX ASM)
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
-
-add_executable(tactom-firmware tactom-firmware.c )
+add_executable(tactom-firmware tactom-firmware.c drv2605.c)
 
 pico_set_program_name(tactom-firmware "tactom-firmware")
 pico_set_program_version(tactom-firmware "0.1")
 
 # Modify the below lines to enable/disable output over UART/USB
 pico_enable_stdio_uart(tactom-firmware 0)
-pico_enable_stdio_usb(tactom-firmware 0)
+# TODO turn off later
+pico_enable_stdio_usb(tactom-firmware 1)
 
 # Add the standard library to the build
 target_link_libraries(tactom-firmware

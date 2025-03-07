@@ -2,30 +2,44 @@
 #include <hardware/i2c.h>
 #include <pico/time.h>
 
-Drv2605 drv2605(i2c_inst_t *i2c_inst, u8 addr) {
+Drv2605 drv2605(u8 addr, u8 port) {
   Drv2605 drv;
-  drv.i2c_inst = i2c_inst;
-  drv.addr = addr;
+  drv.mult_addr = addr;
+  drv.port = port;
   return drv;
+}
+
+void select_port(Drv2605 drv) {
+  u8 mult_mask = 1 << drv.port;
+  i2c_write_blocking(i2c_default, drv.mult_addr, &mult_mask, 1, false);
+}
+
+void write_reg(Drv2605 drv, u8 reg, u8 val) {
+  u8 buffer[2] = {reg, val};
+  i2c_write_blocking(i2c_default, DRV2605_ADDR, buffer, 2, false);
 }
 
 // TODO error handling
 void drv2605_write_reg(Drv2605 drv, u8 reg, u8 val) {
-  u8 buffer[2] = {reg, val};
-  i2c_write_blocking(drv.i2c_inst, drv.addr, buffer, 2, false);
+  select_port(drv);
+  write_reg(drv, reg, val);
+}
+
+u8 read_reg(Drv2605 drv, u8 reg) {
+  i2c_write_blocking(i2c_default, DRV2605_ADDR, &reg, 1, true);
+  u8 buffer;
+  i2c_read_blocking(i2c_default, DRV2605_ADDR, &buffer, 1, false);
+  return buffer;
 }
 
 // TODO error handling
 u8 drv2605_read_reg(Drv2605 drv, u8 reg) {
-  u8 buffer;
-  // TODO why do we write then read and does this work lol?
-  i2c_write_blocking(drv.i2c_inst, drv.addr, &buffer, 1, false);
-  i2c_read_blocking(drv.i2c_inst, drv.addr, &buffer, 1, false);
-  return buffer;
+  select_port(drv);
+  return read_reg(drv, reg);
 }
 
 void set_part_of_reg(Drv2605 drv, u8 reg, u8 mask, u8 val) {
-  drv2605_write_reg(drv, reg, drv2605_read_reg(drv, reg) & mask | val);
+  write_reg(drv, reg, read_reg(drv, reg) & mask | val);
 }
 
 void drv2605_go(Drv2605 drv) { drv2605_write_reg(drv, DRV2605_REG_GO, 1); }
@@ -34,136 +48,45 @@ void drv2605_go(Drv2605 drv) { drv2605_write_reg(drv, DRV2605_REG_GO, 1); }
 /// 0: no error
 /// -1: auto-calibration failed
 int drv2605_init_for_hd_la0503_lw28_motor(Drv2605 drv) {
+  select_port(drv);
+
   // TODO store auto-calibration data and write it instead of auto-calibrating
   // auto-calibration ---------------------------------------------------------
-  drv2605_write_reg(drv, DRV2605_REG_MODE, 0x07); // auto-calibrate mode
+  write_reg(drv, DRV2605_REG_MODE, 0x07); // auto-calibrate mode
 
   u8 fb = 1 << 7   // LRA mode
           & 3 << 4 // default fb_brake_factor: 4x
           & 1 << 2 // default loop_gain: medium
       ;
-  drv2605_write_reg(drv, DRV2605_REG_FEEDBACK, fb);
+  write_reg(drv, DRV2605_REG_FEEDBACK, fb);
 
   // TODO figure out if 26 (0.689Vrms) or 27 (0.716Vrms) is better
-  drv2605_write_reg(drv, DRV2605_REG_RATEDV, 26);
+  write_reg(drv, DRV2605_REG_RATEDV, 26);
 
   // TODO pick this number not based off vibes (1.21V)
-  drv2605_write_reg(drv, DRV2605_REG_CLAMPV, 55);
+  write_reg(drv, DRV2605_REG_CLAMPV, 55);
 
-  set_part_of_reg(drv, DRV2605_REG_CONTROL1, 0b00001111,
+  set_part_of_reg(drv, DRV2605_REG_CONTROL1, 0b11110000,
                   14); // DRIVE_TIME set to 1.92ms
 
-  drv2605_write_reg(drv, DRV2605_REG_GO, 1); // start calibration
+  write_reg(drv, DRV2605_REG_GO, 1); // start calibration
 
-  while (drv2605_read_reg(drv, DRV2605_REG_GO) != 0) {
+  while (read_reg(drv, DRV2605_REG_GO) != 0) {
     sleep_ms(500);
   }
 
   // if DIAG_RESULT == 1, error
-  if ((drv2605_read_reg(drv, DRV2605_REG_STATUS) >> 3) & 1) {
+  if ((read_reg(drv, DRV2605_REG_STATUS) >> 3) & 1) {
     return -1;
   }
   // --------------------------------------------------------------------------
 
-  drv2605_write_reg(drv, DRV2605_REG_LIBRARY, 6);  // LRA effect library
-  drv2605_write_reg(drv, DRV2605_REG_WAVESEQ1, 1); // strong click
-  drv2605_write_reg(drv, DRV2605_REG_WAVESEQ2, 0); // end sequence
+  write_reg(drv, DRV2605_REG_LIBRARY, 6);  // LRA effect library
+  write_reg(drv, DRV2605_REG_WAVESEQ1, 1); // strong click
+  write_reg(drv, DRV2605_REG_WAVESEQ2, 0); // end sequence
 
   return 0;
 }
-
-/**************************************************************************/
-/*!
-  @brief Select the haptic waveform to use.
-  @param slot The waveform slot to set, from 0 to 7
-  @param w The waveform sequence value, refers to an index in the ROM library.
-
-    Playback starts at slot 0 and continues through to slot 7, stopping if it
-  encounters a value of 0. A list of available waveforms can be found in
-  section 11.2 of the datasheet: http://www.adafruit.com/datasheets/DRV2605.pdf
-*/
-/**************************************************************************/
-// void Adafruit_DRV2605::setWaveform(uint8_t slot, uint8_t w) {
-//   writeRegister8(DRV2605_REG_WAVESEQ1 + slot, w);
-// }
-
-/**************************************************************************/
-/*!
-  @brief Select the waveform library to use.
-  @param lib Library to use, 0 = Empty, 1-5 are ERM, 6 is LRA.
-
-    See section 7.6.4 in the datasheet for more details:
-  http://www.adafruit.com/datasheets/DRV2605.pdf
-*/
-/**************************************************************************/
-// void Adafruit_DRV2605::selectLibrary(uint8_t lib) {
-//   writeRegister8(DRV2605_REG_LIBRARY, lib);
-// }
-
-/**************************************************************************/
-/*!
-  @brief Start playback of the waveforms (start moving!).
-*/
-/**************************************************************************/
-// void Adafruit_DRV2605::go() { writeRegister8(DRV2605_REG_GO, 1); }
-
-/**************************************************************************/
-/*!
-  @brief Stop playback.
-*/
-/**************************************************************************/
-// void Adafruit_DRV2605::stop() { writeRegister8(DRV2605_REG_GO, 0); }
-
-/**************************************************************************/
-/*!
-  @brief Set the device mode.
-  @param mode Mode value, see datasheet section 7.6.2:
-  http://www.adafruit.com/datasheets/DRV2605.pdf
-
-    0: Internal trigger, call go() to start playback\n
-    1: External trigger, rising edge on IN pin starts playback\n
-    2: External trigger, playback follows the state of IN pin\n
-    3: PWM/analog input\n
-    4: Audio\n
-    5: Real-time playback\n
-    6: Diagnostics\n
-    7: Auto calibration
-*/
-/**************************************************************************/
-// void Adafruit_DRV2605::setMode(uint8_t mode) {
-//   writeRegister8(DRV2605_REG_MODE, mode);
-// }
-
-/**************************************************************************/
-/*!
-  @brief Set the realtime value when in RTP mode, used to directly drive the
-  haptic motor.
-  @param rtp 8-bit drive value.
-*/
-/**************************************************************************/
-// void Adafruit_DRV2605::setRealtimeValue(uint8_t rtp) {
-//   writeRegister8(DRV2605_REG_RTPIN, rtp);
-// }
-
-/**************************************************************************/
-/*!
-  @brief Use ERM (Eccentric Rotating Mass) mode.
-*/
-/**************************************************************************/
-// void Adafruit_DRV2605::useERM() {
-//   writeRegister8(DRV2605_REG_FEEDBACK,
-//                  readRegister8(DRV2605_REG_FEEDBACK) & 0x7F);
-// }
-
-/**************************************************************************/
-/*!
-  @brief Use LRA (Linear Resonance Actuator) mode.
-*/
-/**************************************************************************/
-// void Adafruit_DRV2605::useLRA() {
-//   writeRegister8(DRV2605_REG_FEEDBACK,
-//                  readRegister8(DRV2605_REG_FEEDBACK) | 0x80);
-// }
 
 /**************************************************************************/
 /* Portions of this project have been copied from the Adafruit DRV2605L Haptic
