@@ -1,0 +1,13 @@
+letters come in over serial, sit in the hardware buffer or the tusb buffer whatever
+either by callback or by scheduling, convert letters into a series of events, push the events into the event buffer with some timing info
+
+event {
+  abs_time;
+  ev_enum;
+}
+
+enum
+
+how big is the tusb buffer such that we can let it fill up?
+
+main thread is driving the event loop, which plays events from the event buffer at the correct times

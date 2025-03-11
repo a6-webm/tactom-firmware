@@ -41,7 +41,6 @@ pico_set_program_version(tactom-firmware "0.1")
 
 # Modify the below lines to enable/disable output over UART/USB
 pico_enable_stdio_uart(tactom-firmware 0)
-# TODO turn off later
 pico_enable_stdio_usb(tactom-firmware 1)
 
 # Add the standard library to the build

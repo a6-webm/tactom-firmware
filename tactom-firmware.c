@@ -1,6 +1,6 @@
 #include "drv2605.h"
 #include "pico/cyw43_arch.h"
-#include "pico/stdlib.h"
+#include "pico/stdio.h"
 #include "tusb.h"
 #include <hardware/i2c.h>
 #include <pico/error.h>
@@ -12,6 +12,16 @@
 #define I2C_SCL 1
 #define BAUD (400 * 1000)
 
+/*
+Placement of drivers on the palm-side of the forearm:
+Numbers represent the index of the driver
+  Palm
+  0  1  2
+  3  4  5
+  6  7  8
+  9 10 11
+  Elbow
+*/
 #define NUM_DRVS 2
 const u8 DRV_ADDRESSES[NUM_DRVS] = {0x70, 0x70};
 const u8 DRV_PORTS[NUM_DRVS] = {0, 1};
@@ -66,6 +76,9 @@ int main() {
   }
 
   printf("drives initialised\n");
+
+  // TODO recieve serial characters
+  // TODO drive event buffer
 
   while (true) {
     for (int i = 0; i < NUM_DRVS; i++) {
