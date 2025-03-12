@@ -1,36 +1,38 @@
 #include "event.h"
 #include <pico/time.h>
 
-inline bool eb_is_empty(EvBuf *eb) { return eb->count == 0; }
+inline int inc1(int x) { return x + 1 == EVENT_BUF_SIZE ? 0 : x + 1; }
+inline int dec1(int x) { return x - 1 == -1 ? EVENT_BUF_SIZE - 1 : x - 1; }
+
+inline bool eb_is_empty(EvBuf *eb) { return eb->head == eb->tail; }
+
+inline bool eb_is_full(EvBuf *eb) { return inc1(eb->head) == eb->tail; }
 
 int eb_queue(EvBuf *eb, Ev event, absolute_time_t offset) {
-  if (eb->count == EVENT_BUF_SIZE)
+  if (eb_is_full(eb))
     return -1;
   event.abs_time += offset;
   eb->buffer[eb->head] = event;
-  eb->head++;
-  if (eb->head == EVENT_BUF_SIZE)
-    eb->head = 0;
-  eb->count++;
+  eb->head = inc1(eb->head);
   return 0;
 }
 
 Ev eb_pop(EvBuf *eb) {
   Ev event = eb->buffer[eb->tail];
-  if (eb->count == 0)
+  if (eb_is_full(eb))
     return event; // Silently errors
-  eb->tail++;
-  if (eb->head == EVENT_BUF_SIZE)
-    eb->head = 0;
-  eb->count--;
+  eb->tail = inc1(eb->tail);
   return event;
 }
 
+Ev eb_peek(EvBuf *eb) {
+  Ev event = eb->buffer[eb->tail];
+  return event; // Silently errors if buffer is empty
+}
+
 absolute_time_t eb_last_timestamp(EvBuf *eb) {
-  if (eb->count == 0)
+  if (eb_is_empty(eb))
     return get_absolute_time();
-  int idx = eb->head - 1;
-  if (idx < 0)
-    idx = EVENT_BUF_SIZE - 1;
-  return eb->buffer[eb->head - 1].abs_time;
+  int idx = dec1(eb->head);
+  return eb->buffer[idx].abs_time;
 }

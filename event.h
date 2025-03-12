@@ -1,6 +1,8 @@
+#pragma once
+
 #include <pico/types.h>
 
-#define EVENT_BUF_SIZE 100
+#define EVENT_BUF_SIZE 200
 
 typedef enum EvType {
   DRV_0, // Play effect on drive "DRV_<index>"
@@ -27,13 +29,14 @@ typedef struct EvBuf {
   Ev buffer[EVENT_BUF_SIZE];
   int head;
   int tail;
-  int count;
 } EvBuf;
 
-inline bool eb_is_empty(EvBuf *eb);
+bool eb_is_empty(EvBuf *eb);
 
 int eb_queue(EvBuf *eb, Ev event, absolute_time_t offset);
 
 Ev eb_pop(EvBuf *eb);
+
+Ev eb_peek(EvBuf *eb);
 
 absolute_time_t eb_last_timestamp(EvBuf *eb);

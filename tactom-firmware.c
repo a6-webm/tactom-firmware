@@ -1,4 +1,6 @@
 #include "drv2605.h"
+#include "event.h"
+#include "glyphs.h"
 #include "pico/cyw43_arch.h"
 #include "pico/stdio.h"
 #include "tusb.h"
@@ -40,6 +42,18 @@ void flash(u8 flashes) {
   }
 }
 
+inline void play_ev(Ev ev, Drv2605 *drvs) {
+  if (ev.ev_type == END_GLYPH)
+    return;
+  drv2605_go(drvs[ev.ev_type]);
+}
+
+void queue_glyph_from_get_char(void *eb) {
+  printf("huh\n");
+  char c = getchar_timeout_us(0);
+  queue_glyph_events(eb, c);
+}
+
 int main() {
   stdio_init_all();
   // WARN DBG wait for terminal to connect
@@ -76,15 +90,21 @@ int main() {
   }
 
   printf("drives initialised\n");
+  stdio_flush();
 
-  // TODO recieve serial characters
-  // TODO drive event buffer
+  EvBuf eb;
+
+  stdio_set_chars_available_callback(queue_glyph_from_get_char, &eb);
 
   while (true) {
-    for (int i = 0; i < NUM_DRVS; i++) {
-      drv2605_go(drvs[i]);
+    if (!eb_is_empty(&eb)) {
+      // TODO write some code that drains and just prints the ev queue so u can
+      // tell what's going on
+      Ev ev = eb_peek(&eb);
+      if (ev.abs_time <= get_absolute_time()) {
+        play_ev(ev, drvs);
+        eb_pop(&eb);
+      }
     }
-    flash(1);
-    sleep_ms(1000);
   }
 }
