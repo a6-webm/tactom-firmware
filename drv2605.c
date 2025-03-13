@@ -1,6 +1,7 @@
 #include "drv2605.h"
 #include <hardware/i2c.h>
 #include <pico/time.h>
+#include <stdio.h>
 
 Drv2605 drv2605(u8 addr, u8 port) {
   Drv2605 drv;
@@ -81,8 +82,13 @@ int drv2605_init_for_hd_la0503_lw28_motor(Drv2605 drv) {
   }
   // --------------------------------------------------------------------------
 
-  write_reg(drv, DRV2605_REG_LIBRARY, 6);  // LRA effect library
-  write_reg(drv, DRV2605_REG_WAVESEQ1, 1); // strong click
+  // TODO effets are not being selected
+  set_part_of_reg(drv, DRV2605_REG_LIBRARY, 0b11111000,
+                  6); // LRA effect library
+  // write_reg(drv, DRV2605_REG_WAVESEQ1, 1); // strong click: 100%
+  // write_reg(drv, DRV2605_REG_WAVESEQ1, 4); // strong tick: 100%
+  write_reg(drv, DRV2605_REG_WAVESEQ1, 83);
+  // write_reg(drv, DRV2605_REG_WAVESEQ2, 24); // sharp tick 1: 100%
   write_reg(drv, DRV2605_REG_WAVESEQ2, 0); // end sequence
 
   return 0;

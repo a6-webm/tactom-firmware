@@ -26,10 +26,14 @@ typedef struct Ev {
 } Ev;
 
 typedef struct EvBuf {
-  Ev buffer[EVENT_BUF_SIZE];
+  Ev* buffer;
   int head;
   int tail;
 } EvBuf;
+
+EvBuf ev_buf();
+
+void eb_free(EvBuf ev_buf);
 
 bool eb_is_empty(EvBuf *eb);
 

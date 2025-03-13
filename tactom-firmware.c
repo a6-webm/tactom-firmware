@@ -49,7 +49,6 @@ inline void play_ev(Ev ev, Drv2605 *drvs) {
 }
 
 void queue_glyph_from_get_char(void *eb) {
-  printf("huh\n");
   char c = getchar_timeout_us(0);
   queue_glyph_events(eb, c);
 }
@@ -92,19 +91,20 @@ int main() {
   printf("drives initialised\n");
   stdio_flush();
 
-  EvBuf eb;
+  EvBuf eb = ev_buf();
 
   stdio_set_chars_available_callback(queue_glyph_from_get_char, &eb);
 
   while (true) {
     if (!eb_is_empty(&eb)) {
-      // TODO write some code that drains and just prints the ev queue so u can
-      // tell what's going on
       Ev ev = eb_peek(&eb);
       if (ev.abs_time <= get_absolute_time()) {
         play_ev(ev, drvs);
+        printf("ev: %d\n", ev.ev_type);
         eb_pop(&eb);
       }
     }
   }
+
+  eb_free(eb);
 }
