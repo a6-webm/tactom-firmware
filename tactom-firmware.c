@@ -50,6 +50,7 @@ inline void play_ev(Ev ev, Drv2605 *drvs) {
 
 void queue_glyph_from_get_char(void *eb) {
   char c = getchar_timeout_us(0);
+  printf("char '%c' recieved\n", c);
   queue_glyph_events(eb, c);
 }
 

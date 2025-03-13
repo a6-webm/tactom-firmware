@@ -1,7 +1,6 @@
 #include "drv2605.h"
 #include <hardware/i2c.h>
 #include <pico/time.h>
-#include <stdio.h>
 
 Drv2605 drv2605(u8 addr, u8 port) {
   Drv2605 drv;
@@ -45,6 +44,16 @@ void set_part_of_reg(Drv2605 drv, u8 reg, u8 mask, u8 val) {
 
 void drv2605_go(Drv2605 drv) { drv2605_write_reg(drv, DRV2605_REG_GO, 1); }
 
+void set_wave(Drv2605 drv, u8 wave) {
+  write_reg(drv, DRV2605_REG_WAVESEQ1, wave);
+  write_reg(drv, DRV2605_REG_WAVESEQ2, 0); // end sequence
+}
+
+void drv2605_set_wave(Drv2605 drv, u8 wave) {
+  select_port(drv);
+  set_wave(drv, wave);
+}
+
 /// Returns:
 /// 0: no error
 /// -1: auto-calibration failed
@@ -52,6 +61,7 @@ int drv2605_init_for_hd_la0503_lw28_motor(Drv2605 drv) {
   select_port(drv);
 
   // TODO store auto-calibration data and write it instead of auto-calibrating
+  // TODO calibration might be unnecesarily different for each motor
   // auto-calibration ---------------------------------------------------------
   write_reg(drv, DRV2605_REG_MODE, 0x07); // auto-calibrate mode
 
@@ -82,14 +92,12 @@ int drv2605_init_for_hd_la0503_lw28_motor(Drv2605 drv) {
   }
   // --------------------------------------------------------------------------
 
-  // TODO effets are not being selected
+  write_reg(drv, DRV2605_REG_MODE, DRV2605_MODE_INTTRIG);
+
+  // TODO effects are not being selected
   set_part_of_reg(drv, DRV2605_REG_LIBRARY, 0b11111000,
                   6); // LRA effect library
-  // write_reg(drv, DRV2605_REG_WAVESEQ1, 1); // strong click: 100%
-  // write_reg(drv, DRV2605_REG_WAVESEQ1, 4); // strong tick: 100%
-  write_reg(drv, DRV2605_REG_WAVESEQ1, 83);
-  // write_reg(drv, DRV2605_REG_WAVESEQ2, 24); // sharp tick 1: 100%
-  write_reg(drv, DRV2605_REG_WAVESEQ2, 0); // end sequence
+  set_wave(drv, 24);  // Sharp tick
 
   return 0;
 }

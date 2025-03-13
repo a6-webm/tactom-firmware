@@ -60,7 +60,8 @@ typedef struct Drv2605Inst {
 } Drv2605;
 
 Drv2605 drv2605(u8 addr, u8 port);
-int drv2605_init_for_hd_la0503_lw28_motor(Drv2605 drv2605_inst);
+void drv2605_set_wave(Drv2605 drv, u8 wave);
+int drv2605_init_for_hd_la0503_lw28_motor(Drv2605 drv);
 void drv2605_write_reg(Drv2605 drv2605_inst, u8 reg, u8 val);
 u8 drv2605_read_reg(Drv2605 drv, u8 reg);
 void drv2605_go(Drv2605 drv);

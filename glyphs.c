@@ -130,7 +130,7 @@ const Ev N7_GLYPH[N7_GLYPH_LEN] = {{.abs_time = MS(0), .ev_type = DRV_0},
 #define N8_GLYPH_LEN 3
 const Ev N8_GLYPH[N8_GLYPH_LEN] = {
     {.abs_time = MS(0), .ev_type = DRV_0},
-    {.abs_time = MS(200), .ev_type = DRV_1},
+    {.abs_time = MS(0), .ev_type = DRV_1},
     {.abs_time = MS(1200), .ev_type = END_GLYPH}};
 
 #define N9_GLYPH_LEN 2
