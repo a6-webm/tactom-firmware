@@ -1,6 +1,9 @@
+#include <hardware/i2c.h>
 #include <stdbool.h>
 
 typedef unsigned char u8;
+
+#define MULT_ADDR 0x70 // Address of multiplexer
 
 #define DRV2605_ADDR 0x5A ///< Device I2C address
 
@@ -55,11 +58,11 @@ typedef unsigned char u8;
 #define DRV2605_REG_LRARESON 0x22 ///< LRA resonance-period register
 
 typedef struct Drv2605Inst {
-  u8 mult_addr;
+  i2c_inst_t *i2c;
   u8 port;
 } Drv2605;
 
-Drv2605 drv2605(u8 addr, u8 port);
+Drv2605 drv2605(i2c_inst_t *i2c, u8 port);
 void drv2605_set_wave(Drv2605 drv, u8 wave);
 int drv2605_init_for_hd_la0503_lw28_motor(Drv2605 drv);
 void drv2605_write_reg(Drv2605 drv2605_inst, u8 reg, u8 val);
