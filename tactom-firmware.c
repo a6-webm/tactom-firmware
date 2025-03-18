@@ -9,12 +9,14 @@
 #include <pico/stdio.h>
 #include <pico/time.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define I2C0_SDA 4
 #define I2C0_SCL 5
 #define I2C1_SDA 18
 #define I2C1_SCL 19
 #define BAUD (400 * 1000)
+#define INPUT_BUFFER_SIZE 200
 
 /*
 Placement of drivers on the palm-side of the forearm:
@@ -29,12 +31,15 @@ Numbers represent the index of the driver
 
 // TODO bring back two i2c devices
 
-#define NUM_DRVS 8
+#define NUM_DRVS 4
 // I2C1_SPLIT splits the DRV_PORTS array in two, so that the former
 // addresses are accessed with i2c0, and the latter i2c1
-#define I2C1_SPLIT 4
+#define I2C1_SPLIT 2
 const u8 DRV_PORTS[NUM_DRVS] = {
-    0, 1, 2, 3, 0, 1, 2, 3,
+    0,
+    1,
+    0,
+    1,
 };
 
 void flash(u8 flashes) {
@@ -52,10 +57,32 @@ inline void play_ev(Ev ev, Drv2605 *drvs) {
   drv2605_go(drvs[ev.ev_type]);
 }
 
-void queue_glyph_from_get_char(void *eb) {
+typedef struct stdin_callback_data {
+  char *buf;
+  size_t buf_len;
+  EvBuf *ev_buf;
+} stdin_callback_data;
+
+void handle_stdin_char(void *callback_data) {
+  stdin_callback_data *data = callback_data;
   char c = getchar_timeout_us(0);
-  printf("char '%c' recieved\n", c);
-  queue_glyph_events(eb, c);
+  if (c == '\r') {
+    data->buf[data->buf_len] = '\0';
+    for (size_t i = 0; i < data->buf_len; i++) {
+      queue_glyph_events(data->ev_buf, data->buf[i]);
+    }
+    printf("'%s' queued\n", data->buf);
+    data->buf_len = 0;
+  } else if (c == 127 && data->buf_len != 0) { // backspace
+    data->buf_len--;
+    data->buf[data->buf_len] = '\0';
+    printf("msg: %s\n", data->buf);
+  } else {
+    data->buf[data->buf_len] = c;
+    data->buf[data->buf_len + 1] = '\0';
+    data->buf_len++;
+    printf("msg: %s\n", data->buf);
+  }
 }
 
 int main() {
@@ -108,9 +135,12 @@ int main() {
   stdio_flush();
 
   EvBuf eb = ev_buf();
+  stdin_callback_data callback_data = {
+      .ev_buf = &eb,
+      .buf = malloc(sizeof(char) * INPUT_BUFFER_SIZE),
+      .buf_len = 0};
 
-  // TODO only queue events when a line is sent
-  stdio_set_chars_available_callback(queue_glyph_from_get_char, &eb);
+  stdio_set_chars_available_callback(handle_stdin_char, &callback_data);
 
   while (true) {
     if (!eb_is_empty(&eb)) {
@@ -124,4 +154,5 @@ int main() {
   }
 
   eb_free(eb);
+  free(callback_data.buf);
 }
