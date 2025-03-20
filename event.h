@@ -5,18 +5,18 @@
 #define EVENT_BUF_SIZE 200
 
 typedef enum EvType {
-  DRV_0, // Play effect on drive "DRV_<index>"
-  DRV_1,
-  DRV_2,
-  DRV_3,
-  DRV_4,
-  DRV_5,
-  DRV_6,
-  DRV_7,
-  DRV_8,
-  DRV_9,
-  DRV_10,
-  DRV_11,
+  GO_0, // Play motor with index "GO_<index>"
+  GO_1,
+  GO_2,
+  GO_3,
+  GO_4,
+  GO_5,
+  GO_6,
+  GO_7,
+  GO_8,
+  GO_9,
+  GO_10,
+  GO_11,
   END_GLYPH, // Denote the end of a glyph
 } EvType;
 

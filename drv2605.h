@@ -3,8 +3,6 @@
 
 typedef unsigned char u8;
 
-#define MULT_ADDR 0x70 // Address of multiplexer
-
 #define DRV2605_ADDR 0x5A ///< Device I2C address
 
 #define DRV2605_REG_STATUS 0x00       ///< Status register
@@ -57,17 +55,11 @@ typedef unsigned char u8;
 #define DRV2605_REG_VBAT 0x21     ///< Vbat voltage-monitor register
 #define DRV2605_REG_LRARESON 0x22 ///< LRA resonance-period register
 
-typedef struct Drv2605Inst {
-  i2c_inst_t *i2c;
-  u8 port;
-} Drv2605;
-
-Drv2605 drv2605(i2c_inst_t *i2c, u8 port);
-void drv2605_set_wave(Drv2605 drv, u8 wave);
-int drv2605_init_for_hd_la0503_lw28_motor(Drv2605 drv);
-void drv2605_write_reg(Drv2605 drv2605_inst, u8 reg, u8 val);
-u8 drv2605_read_reg(Drv2605 drv, u8 reg);
-void drv2605_go(Drv2605 drv);
+void drv2605_set_wave(u8 wave);
+int drv2605_init_for_hd_la0503_lw28_motor();
+void drv2605_write_reg(u8 reg, u8 val);
+u8 drv2605_read_reg(u8 reg);
+void drv2605_go();
 
 /**************************************************************************/
 /* Portions of this project have been copied from the Adafruit DRV2605L Haptic

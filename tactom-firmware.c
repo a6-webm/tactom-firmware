@@ -4,6 +4,7 @@
 #include "pico/cyw43_arch.h"
 #include "pico/stdio.h"
 #include "tusb.h"
+#include <hardware/gpio.h>
 #include <hardware/i2c.h>
 #include <pico/error.h>
 #include <pico/stdio.h>
@@ -11,32 +12,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define I2C0_SDA 4
-#define I2C0_SCL 5
-#define I2C1_SDA 18
-#define I2C1_SCL 19
+#define I2C_SDA 0
+#define I2C_SCL 1
 #define BAUD (400 * 1000)
-#define INPUT_BUFFER_SIZE 200
+#define INPUT_BUFFER_SIZE 1000
 
 /*
-Placement of drivers on the palm-side of the forearm:
-Numbers represent the index of the driver
-  Palm
+Placement of motors on the palm:
+Numbers represent the index of the motor
+  Fingers
   0  1  2
   3  4  5
   6  7  8
   9 10 11
-  Elbow
+  Wrist
 */
 
-#define NUM_DRVS 12
-// I2C1_SPLIT splits the DRV_PORTS array in two, so that the former
-// addresses are accessed with i2c0, and the latter i2c1
-#define I2C1_SPLIT 6
-const u8 DRV_PORTS[NUM_DRVS] = {
-    0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5,
-    // 0,
-};
+#define NUM_MOTORS 12
+const u8 MOTOR_GPIOS[NUM_MOTORS] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+
+u8 selected_motor;
 
 void flash(u8 flashes) {
   for (u8 i = 0; i < flashes; i++) {
@@ -47,10 +42,13 @@ void flash(u8 flashes) {
   }
 }
 
-inline void play_ev(Ev ev, Drv2605 *drvs) {
+inline void play_ev(Ev ev) {
   if (ev.ev_type == END_GLYPH)
     return;
-  drv2605_go(drvs[ev.ev_type]);
+  gpio_put(MOTOR_GPIOS[selected_motor], false);
+  selected_motor = ev.ev_type;
+  gpio_put(MOTOR_GPIOS[selected_motor], true);
+  drv2605_go();
 }
 
 typedef struct stdin_callback_data {
@@ -69,16 +67,20 @@ void handle_stdin_char(void *callback_data) {
     }
     printf("'%s' queued\n", data->buf);
     data->buf_len = 0;
-  } else if (c == 127 && data->buf_len != 0) { // backspace
+    return;
+  }
+  if (c == 127 && data->buf_len != 0) { // backspace
     data->buf_len--;
     data->buf[data->buf_len] = '\0';
     printf("msg: %s\n", data->buf);
-  } else {
+    return;
+  }
+  if (data->buf_len != INPUT_BUFFER_SIZE) { // add character
     data->buf[data->buf_len] = c;
     data->buf[data->buf_len + 1] = '\0';
     data->buf_len++;
-    printf("msg: %s\n", data->buf);
   }
+  printf("msg: %s\n", data->buf);
 }
 
 int main() {
@@ -99,34 +101,26 @@ int main() {
   if (i2c_init(i2c1, BAUD) != BAUD) {
     return -1;
   }
-  gpio_set_function(I2C0_SDA, GPIO_FUNC_I2C);
-  gpio_set_function(I2C0_SCL, GPIO_FUNC_I2C);
-  gpio_set_function(I2C1_SDA, GPIO_FUNC_I2C);
-  gpio_set_function(I2C1_SCL, GPIO_FUNC_I2C);
-  gpio_pull_up(I2C0_SDA);
-  gpio_pull_up(I2C0_SCL);
-  gpio_pull_up(I2C1_SDA);
-  gpio_pull_up(I2C1_SCL);
+  gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
+  gpio_set_function(I2C_SCL, GPIO_FUNC_I2C);
+  gpio_pull_up(I2C_SDA);
+  gpio_pull_up(I2C_SCL);
 
-  Drv2605 drvs[NUM_DRVS];
-  for (int i = 0; i < I2C1_SPLIT; i++) {
-    drvs[i] = drv2605(i2c0, DRV_PORTS[i]);
+  for (int i = 0; i < NUM_MOTORS; i++) {
+    gpio_init(MOTOR_GPIOS[i]);
+    gpio_set_dir(MOTOR_GPIOS[i], true);
+    gpio_put(MOTOR_GPIOS[i], false);
   }
-  for (int i = I2C1_SPLIT; i < NUM_DRVS; i++) {
-    drvs[i] = drv2605(i2c1, DRV_PORTS[i]);
-  }
+  selected_motor = 0;
+  gpio_put(MOTOR_GPIOS[selected_motor], true);
   flash(2);
-  printf("finished setup, initialising drivers\n");
+  printf("finished setup, initialising driver\n");
 
-  for (int i = 0; i < NUM_DRVS; i++) {
-    while (drv2605_init_for_hd_la0503_lw28_motor(drvs[i]) < 0) {
-      printf("ERR: error initialising drv: %d\n", i);
-    }
-    printf("initialised drv: %d\n", i);
-    flash(1);
+  while (drv2605_init_for_hd_la0503_lw28_motor() < 0) {
+    printf("ERR: error initialising driver, retrying...");
   }
 
-  printf("drives initialised\n");
+  printf("driver initialised\n");
   flash(3);
   stdio_flush();
 
@@ -142,7 +136,7 @@ int main() {
     if (!eb_is_empty(&eb)) {
       Ev ev = eb_peek(&eb);
       if (ev.abs_time <= get_absolute_time()) {
-        play_ev(ev, drvs);
+        play_ev(ev);
         printf("ev: %d\n", ev.ev_type);
         eb_pop(&eb);
       }
