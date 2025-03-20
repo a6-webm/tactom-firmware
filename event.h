@@ -39,6 +39,8 @@ bool eb_is_empty(EvBuf *eb);
 
 int eb_queue(EvBuf *eb, Ev event, absolute_time_t offset);
 
+int eb_queue_mult(EvBuf *eb, Ev event, absolute_time_t offset, float mult);
+
 Ev eb_pop(EvBuf *eb);
 
 Ev eb_peek(EvBuf *eb);

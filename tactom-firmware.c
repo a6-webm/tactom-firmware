@@ -29,17 +29,13 @@ Numbers represent the index of the driver
   Elbow
 */
 
-// TODO bring back two i2c devices
-
-#define NUM_DRVS 4
+#define NUM_DRVS 12
 // I2C1_SPLIT splits the DRV_PORTS array in two, so that the former
 // addresses are accessed with i2c0, and the latter i2c1
-#define I2C1_SPLIT 2
+#define I2C1_SPLIT 6
 const u8 DRV_PORTS[NUM_DRVS] = {
-    0,
-    1,
-    0,
-    1,
+    0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5,
+    // 0,
 };
 
 void flash(u8 flashes) {

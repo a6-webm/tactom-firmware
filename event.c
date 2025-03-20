@@ -28,6 +28,11 @@ int eb_queue(EvBuf *eb, Ev event, absolute_time_t offset) {
   return 0;
 }
 
+int eb_queue_mult(EvBuf *eb, Ev event, absolute_time_t offset, float mult) {
+  event.abs_time *= mult;
+  return eb_queue(eb, event, offset);
+}
+
 Ev eb_pop(EvBuf *eb) {
   Ev event = eb->buffer[eb->tail];
   if (eb_is_empty(eb))

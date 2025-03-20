@@ -1,7 +1,8 @@
 #include "glyphs.h"
 
 #define MS(us) (us * 1000)
-#define GLYPH_DELAY MS(200)
+#define GLYPH_DELAY MS(50)
+// #define SPEED_MULT 1.0
 
 // unindexed glyphs ------------------------------------------------------------
 
@@ -351,22 +352,33 @@ const Ev BTICK_GLYPH[BTICK_GLYPH_LEN] = {
 
 #define A_GLYPH_LEN 2
 const Ev A_GLYPH[A_GLYPH_LEN] = {
-    {.abs_time = MS(0), .ev_type = DRV_0},
+    {.abs_time = MS(0), .ev_type = DRV_1},
     {.abs_time = MS(0) + GLYPH_DELAY, .ev_type = END_GLYPH}};
 
-#define B_GLYPH_LEN 2
+#define B_GLYPH_LEN 13
 const Ev B_GLYPH[B_GLYPH_LEN] = {
     {.abs_time = MS(0), .ev_type = DRV_0},
+    {.abs_time = MS(0), .ev_type = DRV_1},
+    {.abs_time = MS(0), .ev_type = DRV_2},
+    {.abs_time = MS(0), .ev_type = DRV_3},
+    {.abs_time = MS(0), .ev_type = DRV_4},
+    {.abs_time = MS(0), .ev_type = DRV_5},
+    {.abs_time = MS(0), .ev_type = DRV_6},
+    {.abs_time = MS(0), .ev_type = DRV_7},
+    {.abs_time = MS(0), .ev_type = DRV_8},
+    {.abs_time = MS(0), .ev_type = DRV_9},
+    {.abs_time = MS(0), .ev_type = DRV_10},
+    {.abs_time = MS(0), .ev_type = DRV_11},
     {.abs_time = MS(0) + GLYPH_DELAY, .ev_type = END_GLYPH}};
 
 #define C_GLYPH_LEN 2
 const Ev C_GLYPH[C_GLYPH_LEN] = {
-    {.abs_time = MS(0), .ev_type = DRV_0},
+    {.abs_time = MS(0), .ev_type = DRV_5},
     {.abs_time = MS(0) + GLYPH_DELAY, .ev_type = END_GLYPH}};
 
 #define D_GLYPH_LEN 2
 const Ev D_GLYPH[D_GLYPH_LEN] = {
-    {.abs_time = MS(0), .ev_type = DRV_0},
+    {.abs_time = MS(0), .ev_type = DRV_8},
     {.abs_time = MS(0) + GLYPH_DELAY, .ev_type = END_GLYPH}};
 
 #define E_GLYPH_LEN 2
@@ -376,7 +388,7 @@ const Ev E_GLYPH[E_GLYPH_LEN] = {
 
 #define F_GLYPH_LEN 2
 const Ev F_GLYPH[F_GLYPH_LEN] = {
-    {.abs_time = MS(0), .ev_type = DRV_0},
+    {.abs_time = MS(0), .ev_type = DRV_6},
     {.abs_time = MS(0) + GLYPH_DELAY, .ev_type = END_GLYPH}};
 
 #define G_GLYPH_LEN 2
@@ -426,7 +438,7 @@ const Ev O_GLYPH[O_GLYPH_LEN] = {
 
 #define P_GLYPH_LEN 2
 const Ev P_GLYPH[P_GLYPH_LEN] = {
-    {.abs_time = MS(0), .ev_type = DRV_0},
+    {.abs_time = MS(0), .ev_type = DRV_9},
     {.abs_time = MS(0) + GLYPH_DELAY, .ev_type = END_GLYPH}};
 
 #define Q_GLYPH_LEN 2
@@ -436,17 +448,17 @@ const Ev Q_GLYPH[Q_GLYPH_LEN] = {
 
 #define R_GLYPH_LEN 2
 const Ev R_GLYPH[R_GLYPH_LEN] = {
-    {.abs_time = MS(0), .ev_type = DRV_0},
+    {.abs_time = MS(0), .ev_type = DRV_4},
     {.abs_time = MS(0) + GLYPH_DELAY, .ev_type = END_GLYPH}};
 
 #define S_GLYPH_LEN 2
 const Ev S_GLYPH[S_GLYPH_LEN] = {
-    {.abs_time = MS(0), .ev_type = DRV_0},
+    {.abs_time = MS(0), .ev_type = DRV_7},
     {.abs_time = MS(0) + GLYPH_DELAY, .ev_type = END_GLYPH}};
 
 #define T_GLYPH_LEN 2
 const Ev T_GLYPH[T_GLYPH_LEN] = {
-    {.abs_time = MS(0), .ev_type = DRV_0},
+    {.abs_time = MS(0), .ev_type = DRV_10},
     {.abs_time = MS(0) + GLYPH_DELAY, .ev_type = END_GLYPH}};
 
 #define U_GLYPH_LEN 2
@@ -456,17 +468,17 @@ const Ev U_GLYPH[U_GLYPH_LEN] = {
 
 #define V_GLYPH_LEN 2
 const Ev V_GLYPH[V_GLYPH_LEN] = {
-    {.abs_time = MS(0), .ev_type = DRV_0},
+    {.abs_time = MS(0), .ev_type = DRV_11},
     {.abs_time = MS(0) + GLYPH_DELAY, .ev_type = END_GLYPH}};
 
 #define W_GLYPH_LEN 2
 const Ev W_GLYPH[W_GLYPH_LEN] = {
-    {.abs_time = MS(0), .ev_type = DRV_0},
+    {.abs_time = MS(0), .ev_type = DRV_3},
     {.abs_time = MS(0) + GLYPH_DELAY, .ev_type = END_GLYPH}};
 
 #define X_GLYPH_LEN 2
 const Ev X_GLYPH[X_GLYPH_LEN] = {
-    {.abs_time = MS(0), .ev_type = DRV_0},
+    {.abs_time = MS(0), .ev_type = DRV_2},
     {.abs_time = MS(0) + GLYPH_DELAY, .ev_type = END_GLYPH}};
 
 #define Y_GLYPH_LEN 2
@@ -554,7 +566,11 @@ const Ev *const INDEXED_GLYPHS[GLYPHS_LEN] = {
 void queue_events(EvBuf *eb, const Ev *const events, int num_ev) {
   absolute_time_t last_time = eb_last_timestamp(eb);
   for (int i = 0; i < num_ev; i++) {
+#ifdef SPEED_MULT
+    eb_queue_mult(eb, events[i], last_time, SPEED_MULT);
+#else
     eb_queue(eb, events[i], last_time);
+#endif
   }
 }
 
@@ -562,14 +578,14 @@ void queue_glyph_events(EvBuf *eb, char c) {
   if (c >= ' ' && c <= '~') {
     int idx = c - ' ';
     queue_events(eb, INDEXED_GLYPHS[idx], GLYPH_LENS[idx]);
-  } else {
-    switch (c) {
-    case '\n':
-      queue_events(eb, LF_GLYPH, LF_GLYPH_LEN);
-      break;
-    default:
-      queue_events(eb, UNKNOWN_GLYPH, UNKNOWN_GLYPH_LEN);
-      break;
-    }
+    return;
+  }
+  switch (c) {
+  case '\n':
+    queue_events(eb, LF_GLYPH, LF_GLYPH_LEN);
+    break;
+  default:
+    queue_events(eb, UNKNOWN_GLYPH, UNKNOWN_GLYPH_LEN);
+    break;
   }
 }
