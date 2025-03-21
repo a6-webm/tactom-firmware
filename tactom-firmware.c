@@ -1,16 +1,15 @@
 #include "drv2605.h"
 #include "event.h"
 #include "glyphs.h"
-#include "pico/cyw43_arch.h"
-#include "pico/stdio.h"
-#include "tusb.h"
+#include "s_matrix.h"
 #include <hardware/gpio.h>
 #include <hardware/i2c.h>
+#include <pico/cyw43_arch.h>
 #include <pico/error.h>
 #include <pico/stdio.h>
 #include <pico/time.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <tusb.h>
 
 #define I2C_SDA 0
 #define I2C_SCL 1
@@ -28,11 +27,6 @@ Numbers represent the index of the motor
   Wrist
 */
 
-#define NUM_MOTORS 12
-const u8 MOTOR_GPIOS[NUM_MOTORS] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
-
-u8 selected_motor;
-
 void flash(u8 flashes) {
   for (u8 i = 0; i < flashes; i++) {
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
@@ -42,12 +36,10 @@ void flash(u8 flashes) {
   }
 }
 
-inline void play_ev(Ev ev) {
+inline void play_ev(Ev ev, s_matrix *s_m) {
   if (ev.ev_type == END_GLYPH)
     return;
-  gpio_put(MOTOR_GPIOS[selected_motor], false);
-  selected_motor = ev.ev_type;
-  gpio_put(MOTOR_GPIOS[selected_motor], true);
+  s_matrix_select(s_m, ev.ev_type);
   drv2605_go();
 }
 
@@ -95,24 +87,18 @@ int main() {
     return -1;
   }
 
-  if (i2c_init(i2c0, BAUD) != BAUD) {
+  if (i2c_init(i2c_default, BAUD) != BAUD) {
     return -1;
   }
-  if (i2c_init(i2c1, BAUD) != BAUD) {
-    return -1;
-  }
+
   gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
   gpio_set_function(I2C_SCL, GPIO_FUNC_I2C);
   gpio_pull_up(I2C_SDA);
   gpio_pull_up(I2C_SCL);
 
-  for (int i = 0; i < NUM_MOTORS; i++) {
-    gpio_init(MOTOR_GPIOS[i]);
-    gpio_set_dir(MOTOR_GPIOS[i], true);
-    gpio_put(MOTOR_GPIOS[i], false);
-  }
-  selected_motor = 0;
-  gpio_put(MOTOR_GPIOS[selected_motor], true);
+  s_matrix switch_matrix;
+  s_matrix_init(&switch_matrix);
+
   flash(2);
   printf("finished setup, initialising driver\n");
 
@@ -136,7 +122,7 @@ int main() {
     if (!eb_is_empty(&eb)) {
       Ev ev = eb_peek(&eb);
       if (ev.abs_time <= get_absolute_time()) {
-        play_ev(ev);
+        play_ev(ev, &switch_matrix);
         printf("ev: %d\n", ev.ev_type);
         eb_pop(&eb);
       }
@@ -145,4 +131,5 @@ int main() {
 
   eb_free(eb);
   free(callback_data.buf);
+  s_matrix_free(switch_matrix);
 }

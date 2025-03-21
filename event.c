@@ -12,12 +12,12 @@ EvBuf ev_buf() {
 
 void eb_free(EvBuf ev_buf) { free(ev_buf.buffer); }
 
-inline int inc1(int x) { return x + 1 == EVENT_BUF_SIZE ? 0 : x + 1; }
-inline int dec1(int x) { return x == 0 ? EVENT_BUF_SIZE - 1 : x - 1; }
+int inc1(int x) { return x + 1 == EVENT_BUF_SIZE ? 0 : x + 1; }
+int dec1(int x) { return x == 0 ? EVENT_BUF_SIZE - 1 : x - 1; }
 
-inline bool eb_is_empty(EvBuf *eb) { return eb->head == eb->tail; }
+bool eb_is_empty(EvBuf *eb) { return eb->head == eb->tail; }
 
-inline bool eb_is_full(EvBuf *eb) { return inc1(eb->head) == eb->tail; }
+bool eb_is_full(EvBuf *eb) { return inc1(eb->head) == eb->tail; }
 
 int eb_queue(EvBuf *eb, Ev event, absolute_time_t offset) {
   if (eb_is_full(eb))
