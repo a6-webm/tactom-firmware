@@ -8,6 +8,7 @@ build:
 	cmake .. && \
 	make && \
 	if [ -d $(RPI_PATH) ]; then \
+		echo "rpi detected, moving uf2 to rpi..."; \
 		cp tactom-firmware.uf2 $(RPI_PATH); \
 	fi
 
