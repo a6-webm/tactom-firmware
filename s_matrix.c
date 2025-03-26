@@ -2,10 +2,14 @@
 #include <hardware/gpio.h>
 #include <stdlib.h>
 
-#define ROWS 4
-#define COLS 3
-const u8 ROW_GPIOS[ROWS] = {2, 3, 4, 5};
-const u8 COL_GPIOS[COLS] = {6, 7, 8};
+// #define ROWS 4
+// #define COLS 3
+// const u8 ROW_GPIOS[ROWS] = {2, 3, 4, 5};
+// const u8 COL_GPIOS[COLS] = {6, 7, 8};
+#define ROWS 2
+#define COLS 2
+const u8 ROW_GPIOS[ROWS] = {2, 3};
+const u8 COL_GPIOS[COLS] = {4, 5};
 
 u8 row(u8 idx) { return idx / COLS; }
 

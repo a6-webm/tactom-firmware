@@ -56,9 +56,9 @@ typedef unsigned char u8;
 #define DRV2605_REG_LRARESON 0x22 ///< LRA resonance-period register
 
 void drv2605_set_wave(u8 wave);
-int drv2605_init_auto_calib(float rated_v, float clamp_v, float frequency);
+int drv2605_init_auto_calib(float rated_v, float clamp_v, float frequency, bool open_loop);
 void drv2605_init(float rated_v, float clamp_v, float frequency,
-                  u8 bemf_gain, u8 a_cal_comp, u8 a_cal_bemf);
+                  u8 bemf_gain, u8 a_cal_comp, u8 a_cal_bemf, bool open_loop);
 void drv2605_write_reg(u8 reg, u8 val);
 u8 drv2605_read_reg(u8 reg);
 void drv2605_go();

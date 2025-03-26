@@ -29,7 +29,7 @@ inline void drv2605_set_wave(u8 wave) {
 }
 
 int init(float rated_v, float clamp_v, float frequency, bool calibrate,
-         u8 bemf_gain, u8 a_cal_comp, u8 a_cal_bemf) {
+         u8 bemf_gain, u8 a_cal_comp, u8 a_cal_bemf, bool open_loop) {
 
   set_part_of_reg(DRV2605_REG_FEEDBACK, 0b01111111, 1 << 7); // LRA mode
 
@@ -39,15 +39,15 @@ int init(float rated_v, float clamp_v, float frequency, bool calibrate,
       (u8)(rated_v * sqrt(1 - (4 * s_t + 300 * 0.000001) * frequency) /
            (20.71 * 0.001)));
 
-  // TODO decide if we're doing open-loop
-  // set_part_of_reg(DRV2605_REG_CONTROL3, 0b11111110,
-  //                 1); // LRA_OPEN_LOOP
-  // drv2605_write_reg(
-  //     DRV2605_REG_CLAMPV,
-  //     (u8)(clamp_v / (21.33 * 0.001 * sqrt(1 - frequency * 800 *
-  //     0.000001))));
-
-  drv2605_write_reg(DRV2605_REG_CLAMPV, (u8)(clamp_v / (21.96 * 0.001)));
+  if (open_loop) {
+    set_part_of_reg(DRV2605_REG_CONTROL3, 0b11111110,
+                    1); // LRA_OPEN_LOOP
+    drv2605_write_reg(
+        DRV2605_REG_CLAMPV,
+        (u8)(rated_v / (21.33 * 0.001 * sqrt(1 - frequency * 800 * 0.000001))));
+  } else {
+    drv2605_write_reg(DRV2605_REG_CLAMPV, (u8)(clamp_v / (21.96 * 0.001)));
+  }
 
   set_part_of_reg(DRV2605_REG_CONTROL1, 0b11110000,
                   (u8)((0.5 * 1000 * 1 / frequency - 0.5) / 0.1)); // DRIVE_TIME
@@ -89,15 +89,17 @@ int init(float rated_v, float clamp_v, float frequency, bool calibrate,
 }
 
 void drv2605_init(float rated_v, float clamp_v, float frequency, u8 bemf_gain,
-                  u8 a_cal_comp, u8 a_cal_bemf) {
-  init(rated_v, clamp_v, frequency, false, bemf_gain, a_cal_comp, a_cal_bemf);
+                  u8 a_cal_comp, u8 a_cal_bemf, bool open_loop) {
+  init(rated_v, clamp_v, frequency, false, bemf_gain, a_cal_comp, a_cal_bemf,
+       false);
 }
 
 /// Returns:
 /// 0: no error
 /// -1: auto-calibration failed
-int drv2605_init_auto_calib(float rated_v, float clamp_v, float frequency) {
-  return init(rated_v, clamp_v, frequency, true, 0, 0, 0);
+int drv2605_init_auto_calib(float rated_v, float clamp_v, float frequency,
+                            bool open_loop) {
+  return init(rated_v, clamp_v, frequency, true, 0, 0, 0, false);
 }
 
 /**************************************************************************/

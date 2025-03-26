@@ -152,13 +152,15 @@ int main() {
   // TODO pick clamp_v not off vibes
 
   // HD-LA0503-LW28
-  while (drv2605_init_auto_calib(0.7, 1.2, 260) < 0) {
-    // HD-LA0503-LW28 + 22 Ohms
-    // while (drv2605_init_auto_calib(2.1, 3, 260) < 0) {
-    printf("ERR: error initialising driver, retrying...\n");
-  }
+  // while (drv2605_init_auto_calib(0.7, 1.2, 260, false) < 0) {
+  // HD-LA0503-LW28 + 22 Ohms
+  // while (drv2605_init_auto_calib(2.1, 3, 260, true) < 0) {
+  // HD-LA0503-LW28 + 44 Ohms
+  // while (drv2605_init_auto_calib(4, 4, 260, true) < 0) {
+  //   printf("ERR: error initialising driver, retrying...\n");
+  // }
 
-  // drv2605_init(0.7, 1.2, 260, 3, 23, 29);
+  drv2605_init(4.4, 4.4, 260, 3, 23, 54, true);
 
   printf("driver initialised\n");
   flash(3);
@@ -173,24 +175,24 @@ int main() {
 
   stdio_set_chars_available_callback(handle_stdin_char, &callback_data);
 
-  absolute_time_t timer = get_absolute_time() + MS(1000);
-  while (true) {
-    if (get_absolute_time() >= timer) {
-      drv2605_go();
-      timer = get_absolute_time() + MS(1000);
-    }
-  }
-
+  // absolute_time_t timer = get_absolute_time() + MS(1000);
   // while (true) {
-  //   if (!eb_is_empty(&eb)) {
-  //     Ev ev = eb_peek(&eb);
-  //     if (ev.abs_time <= get_absolute_time()) {
-  //       play_ev(ev, &switch_matrix);
-  //       printf("ev: %d\n", ev.ev_type);
-  //       eb_pop(&eb);
-  //     }
+  //   if (get_absolute_time() >= timer) {
+  //     drv2605_go();
+  //     timer = get_absolute_time() + MS(1000);
   //   }
   // }
+
+  while (true) {
+    if (!eb_is_empty(&eb)) {
+      Ev ev = eb_peek(&eb);
+      if (ev.abs_time <= get_absolute_time()) {
+        play_ev(ev, &switch_matrix);
+        printf("ev: %d\n", ev.ev_type);
+        eb_pop(&eb);
+      }
+    }
+  }
 
   eb_free(eb);
   free(callback_data.buf);
