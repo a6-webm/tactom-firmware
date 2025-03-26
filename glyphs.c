@@ -1,6 +1,6 @@
 #include "glyphs.h"
+#include <pico/types.h>
 
-#define MS(us) (us * 1000)
 #define GLYPH_DELAY MS(50)
 // #define SPEED_MULT 1.0
 
@@ -563,14 +563,18 @@ const Ev *const INDEXED_GLYPHS[GLYPHS_LEN] = {
 
 // -----------------------------------------------------------------------------
 
+void queue_event(EvBuf *eb, Ev event, absolute_time_t offset) {
+#ifdef SPEED_MULT
+  eb_queue_mult(eb, events[i], last_time, SPEED_MULT);
+#else
+  eb_queue(eb, event, offset);
+#endif
+}
+
 void queue_events(EvBuf *eb, const Ev *const events, int num_ev) {
   absolute_time_t last_time = eb_last_timestamp(eb);
   for (int i = 0; i < num_ev; i++) {
-#ifdef SPEED_MULT
-    eb_queue_mult(eb, events[i], last_time, SPEED_MULT);
-#else
-    eb_queue(eb, events[i], last_time);
-#endif
+    queue_event(eb, events[i], last_time);
   }
 }
 

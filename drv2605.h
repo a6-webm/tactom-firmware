@@ -47,7 +47,7 @@ typedef unsigned char u8;
 #define DRV2605_REG_CLAMPV 0x17 ///< Overdrive clamp voltage register
 #define DRV2605_REG_AUTOCALCOMP                                                \
   0x18 ///< Auto-calibration compensation result register
-#define DRV2605_REG_AUTOCALEMP                                                 \
+#define DRV2605_REG_AUTOCALEMF                                                 \
   0x19                            ///< Auto-calibration back-EMF result register
 #define DRV2605_REG_FEEDBACK 0x1A ///< Feedback control register
 #define DRV2605_REG_CONTROL1 0x1B ///< Control1 Register
@@ -64,7 +64,10 @@ typedef struct Drv2605Inst {
 
 Drv2605 drv2605(i2c_inst_t *i2c, u8 port);
 void drv2605_set_wave(Drv2605 drv, u8 wave);
-int drv2605_init_for_hd_la0503_lw28_motor(Drv2605 drv);
+
+int drv2605_init_auto_calib(Drv2605 drv, float rated_v, float clamp_v, float frequency, bool open_loop);
+void drv2605_init(Drv2605 drv, float rated_v, float clamp_v, float frequency,
+                  u8 bemf_gain, u8 a_cal_comp, u8 a_cal_bemf, bool open_loop);
 void drv2605_write_reg(Drv2605 drv2605_inst, u8 reg, u8 val);
 u8 drv2605_read_reg(Drv2605 drv, u8 reg);
 void drv2605_go(Drv2605 drv);
