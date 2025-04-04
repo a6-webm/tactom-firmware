@@ -63,7 +63,7 @@ typedef struct Drv2605Inst {
 } Drv2605;
 
 Drv2605 drv2605(i2c_inst_t *i2c, u8 port);
-void drv2605_set_wave(Drv2605 drv, u8 wave);
+void drv2605_set_wave(Drv2605 drv, u8 *wave_seq);
 
 int drv2605_init_auto_calib(Drv2605 drv, float rated_v, float clamp_v, float frequency, bool open_loop);
 void drv2605_init(Drv2605 drv, float rated_v, float clamp_v, float frequency,

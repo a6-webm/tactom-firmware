@@ -45,14 +45,21 @@ void set_part_of_reg(Drv2605 drv, u8 reg, u8 mask, u8 val) {
 
 void drv2605_go(Drv2605 drv) { drv2605_write_reg(drv, DRV2605_REG_GO, 1); }
 
-void set_wave(Drv2605 drv, u8 wave) {
-  write_reg(drv, DRV2605_REG_WAVESEQ1, wave);
-  write_reg(drv, DRV2605_REG_WAVESEQ2, 0); // end sequence
+void set_wave(Drv2605 drv, u8 *wave_seq) {
+  int i = 0;
+  while (wave_seq[i] != 0 && i < 8) {
+    write_reg(drv, DRV2605_REG_WAVESEQ1 + i, wave_seq[i]);
+    i++;
+  }
+  if (i != 8) {
+    write_reg(drv, DRV2605_REG_WAVESEQ1 + i, 0); // end sequence
+  }
 }
 
-void drv2605_set_wave(Drv2605 drv, u8 wave) {
+/// wave_seq must end in 0 or have 8 elements
+void drv2605_set_wave(Drv2605 drv, u8 *wave_seq) {
   select_port(drv);
-  set_wave(drv, wave);
+  set_wave(drv, wave_seq);
 }
 
 int init(Drv2605 drv, float rated_v, float clamp_v, float frequency,
@@ -110,8 +117,10 @@ int init(Drv2605 drv, float rated_v, float clamp_v, float frequency,
   write_reg(drv, DRV2605_REG_MODE, DRV2605_MODE_INTTRIG);
 
   set_part_of_reg(drv, DRV2605_REG_LIBRARY, 0b11111000,
-                  6);        // LRA effect library
-  drv2605_set_wave(drv, 24); // Sharp tick
+                  6);      // LRA effect library
+  u8 wave_seq[] = {24, 0}; // Sharp tick
+  // u8 wave_seq[] = {85, 73, 0}; // Slow pulse
+  drv2605_set_wave(drv, wave_seq);
   return 0;
 }
 
